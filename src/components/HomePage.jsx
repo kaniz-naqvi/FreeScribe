@@ -1,9 +1,10 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const HomePage = ({ setFile, setAudio }) => {
   const [recordingStatus, setRecordingStatus] = useState("inactive");
   const [audioChunks, setAudioChunks] = useState([]);
   const [duration, setDuration] = useState(0);
+  const [audioStream, setAudioStream] = useState("");
   const mediaRecorder = useRef(null);
   const mimeType = "audio/webm";
   async function startRecording() {
@@ -18,6 +19,7 @@ const HomePage = ({ setFile, setAudio }) => {
     } catch (error) {
       console.log(error.message);
     }
+    setRecordingStatus("recording");
     const media = new MediaRecorder(tempSteam, { type: mimeType });
     mediaRecorder.current = media;
     mediaRecorder.current.start();
@@ -33,6 +35,26 @@ const HomePage = ({ setFile, setAudio }) => {
       setAudio(localAudioChunks);
     };
   }
+  async function stopRecording() {
+    setRecordingStatus("inactive");
+    console.log("stop recording");
+    mediaRecorder.current.stop();
+    mediaRecorder.current.onStop = () => {
+      const audioBlob = new Blob(audioChunks, { type: mimeType });
+      setAudio(audioBlob);
+      setAudio([]);
+    };
+  }
+
+  useEffect(() => {
+    if (recordingStatus == "inactive") {
+      return;
+    }
+    const interval = setInterval(() => {
+      setDuration((current) => current + 1);
+    }, 1000);
+  }, [third]);
+
   return (
     <main className="flex-1 p-4 flex flex-col text-center justify-center">
       <h1 className="font-semibold text-5xl sm:text-6xl md:text-7xl">
